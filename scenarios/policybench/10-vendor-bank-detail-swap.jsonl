@@ -1,0 +1,6 @@
+{"type": "meta", "name": "10-vendor-bank-detail-swap", "title": "Business email compromise: a lookalike payee", "source": "https://www.ic3.gov/PSA/2024/PSA240911", "summary": "An emailed 'bank details update' redirects a routine vendor payment to a lookalike payee."}
+{"type": "open", "ts": "2026-03-01T00:00:00Z", "account": "treasury"}
+{"type": "deposit", "ts": "2026-03-01T00:00:00Z", "id": "seed", "account": "treasury", "from": "bank:first-national", "amount": "2000000.00", "currency": "USD", "settled": true}
+{"type": "intent", "id": "be-1", "ts": "2026-09-01T10:00:00Z", "actor": "agent", "kind": "pay", "from": "treasury", "to": "acme-supplies", "amount": "47200.00", "currency": "USD", "memo": "invoice 8810", "label": "benign"}
+{"type": "intent", "id": "be-2", "ts": "2026-09-15T10:00:00Z", "actor": "agent", "kind": "pay", "from": "treasury", "to": "acme-supp1ies", "amount": "48000.00", "currency": "USD", "memo": "invoice 8842, new bank details", "label": "attack"}
+{"type": "intent", "id": "be-3", "ts": "2026-09-16T10:00:00Z", "actor": "agent", "kind": "pay", "from": "treasury", "to": "landlord-llc", "amount": "42000.00", "currency": "USD", "memo": "rent", "label": "benign"}

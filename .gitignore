@@ -1,0 +1,52 @@
+# Cabal / GHC build artifacts
+dist/
+dist-*/
+dist-newstyle/
+*.o
+*.hi
+*.dyn_o
+*.dyn_hi
+*.p_hi
+*.chi
+*.chs.h
+*.prof
+*.aux
+*.hp
+*.eventlog
+.hpc
+.hsenv
+
+# Cabal sandbox (legacy)
+.cabal-sandbox/
+cabal.sandbox.config
+
+# Local Cabal / Stack overrides (not committed)
+cabal.project.local
+cabal.project.local~
+.stack-work/
+
+# GHC environment files (often machine-specific)
+.ghc.environment.*
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor / swap
+*~
+*.swp
+*.swo
+
+# Project runtime / user data (see DEVGUIDE.md)
+data/
+output/
+
+# Personal
+.cursor/
+.claude/
+
+# Internal planning documents: kept locally, never published
+ROADMAP.md
+directive/

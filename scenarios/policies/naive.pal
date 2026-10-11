@@ -1,0 +1,14 @@
+# naive.pal: static per-payment caps, the kind of spend control most agent
+# wallets and treasury tools ship today. The laws state what the board
+# actually wants; the stress tester shows the rules do not guarantee it.
+
+policy "naive-usd" currency USD {
+  require "per-payment cap": amount <= 250000 USD
+  law     "daily outflow under 15% of assets":
+            total_outflow(24h) <= 0.15 * (total_balance + total_outflow(24h))
+}
+
+policy "naive-usdc" currency USDC {
+  require "per-payment cap": amount <= 500 USDC
+  law     "agent daily budget": total_outflow(24h) <= 2000 USDC
+}

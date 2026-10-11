@@ -1,0 +1,6 @@
+{"type": "meta", "name": "06-bybit-display-mismatch", "title": "Signers approve what the screen shows, not what the transaction does", "source": "https://blocksec.com/blog/bybit-incident-a-web2-breach-enables-the-largest-crypto-hack-in-history", "summary": "Feb 2025: $1.5B left Bybit after a tampered UI showed a routine cold-wallet move. PALISADE judges the actual destination, not the memo."}
+{"type": "open", "ts": "2025-02-01T00:00:00Z", "account": "treasury"}
+{"type": "deposit", "ts": "2025-02-01T00:00:00Z", "id": "seed", "account": "treasury", "from": "bank:first-national", "amount": "2000000.00", "currency": "USD", "settled": true}
+{"type": "intent", "id": "bb-1", "ts": "2025-02-20T10:00:00Z", "actor": "agent", "kind": "pay", "from": "treasury", "to": "cold-storage", "amount": "40000.00", "currency": "USD", "memo": "routine cold storage rebalance", "label": "benign"}
+{"type": "intent", "id": "bb-2", "ts": "2025-02-21T10:00:00Z", "actor": "agent", "kind": "pay", "from": "treasury", "to": "cold-storage-v2", "amount": "240000.00", "currency": "USD", "memo": "routine cold storage rebalance", "label": "attack"}
+{"type": "intent", "id": "bb-3", "ts": "2025-02-21T10:05:00Z", "actor": "agent", "kind": "pay", "from": "treasury", "to": "cold-storage-v2", "amount": "95000.00", "currency": "USD", "memo": "routine cold storage rebalance", "label": "attack"}

@@ -1,0 +1,33 @@
+# hardened.pal: the same intent as naive.pal, written so the rules actually
+# guarantee the laws, plus controls derived from the 2025-2026 incidents.
+
+set approved_vendors = {"aws", "gusto-payroll", "landlord-llc", "acme-supplies", "office-depot"}
+set own_wallets      = {"cold-storage", "exchange-hot"}
+set agent_merchants  = {"openai", "anthropic", "aws", "api-market"}
+set sanctioned       = {"ofac:garantex", "ofac:lazarus-1"}
+
+policy "treasury-usd" currency USD {
+  require  "not sanctioned":        counterparty not in sanctioned
+  require  "per-payment cap":       amount <= 100000 USD
+  require  "treasury reserve floor": source != "treasury" or balance_after >= 250000 USD
+  require  "hourly velocity":       outflow(1h) + amount <= 150000 USD
+  require  "daily outflow cap":     total_outflow(24h) + amount <= 0.15 * total_balance
+  require  "no duplicate payments": duplicates(1h) == 0
+  require  "max share of account":  amount <= 0.5 * balance
+  escalate "new payee":             not known_counterparty and counterparty not in approved_vendors and counterparty not in own_wallets
+  escalate "unusual amount":        known_counterparty and amount > 3 * typical(90d)
+  escalate "dual authorization":    amount > 50000 USD
+  law      "daily outflow under 15% of assets":
+             total_outflow(24h) <= 0.15 * (total_balance + total_outflow(24h))
+}
+
+policy "agent-usdc" currency USDC {
+  require  "not sanctioned":         counterparty not in sanctioned
+  require  "allowlisted merchant":   counterparty in agent_merchants
+  require  "per-payment cap":        amount <= 500 USDC
+  require  "daily agent budget":     total_outflow(24h) + amount <= 2000 USDC
+  require  "never drain the wallet": amount <= 0.25 * balance
+  require  "no duplicate payments":  duplicates(10m) == 0
+  require  "burst limit":            count(1m) < 5
+  law      "agent daily budget":     total_outflow(24h) <= 2000 USDC
+}

@@ -1,0 +1,1 @@
+{"id":"pay-1002","ts":"2026-10-02T11:00:00Z","actor":"agent:ap-bot","kind":"pay","from":"ap-agent","to":"acme-supp1ies","amount":"9800.00","currency":"USD","memo":"Invoice 7731 (bank details updated by email)"}

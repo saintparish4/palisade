@@ -1,0 +1,8 @@
+# Intentional patterns that hlint should not flag
+
+# Orphan ToJSON instance lives in Alpha.CLI by design (avoids a dependency cycle)
+- ignore: {name: "Avoid orphans"}
+
+# The codebase converts Scientific <-> Double for division deliberately;
+# these are not accidental fromIntegral/realToFrac calls
+- ignore: {name: "Use realToFrac"}

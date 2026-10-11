@@ -1,0 +1,6 @@
+{"type":"open","ts":"2026-10-01T00:00:00Z","account":"treasury"}
+{"type":"open","ts":"2026-10-01T00:00:00Z","account":"ap-agent"}
+{"type":"open","ts":"2026-10-01T00:00:00Z","account":"agent-wallet"}
+{"type":"deposit","ts":"2026-10-01T00:00:00Z","id":"seed-1","account":"treasury","from":"bank:first-national","amount":"2000000.00","currency":"USD","settled":true}
+{"type":"deposit","ts":"2026-10-01T00:00:00Z","id":"seed-2","account":"ap-agent","from":"bank:first-national","amount":"50000.00","currency":"USD","settled":true}
+{"type":"deposit","ts":"2026-10-01T00:00:00Z","id":"seed-3","account":"agent-wallet","from":"circle:mint","amount":"60000.000000","currency":"USDC","settled":true}

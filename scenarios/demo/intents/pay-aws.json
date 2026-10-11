@@ -1,0 +1,1 @@
+{"id":"pay-1001","ts":"2026-10-02T10:00:00Z","actor":"agent:ap-bot","kind":"pay","from":"treasury","to":"aws","amount":"12400.00","currency":"USD","memo":"October cloud bill"}

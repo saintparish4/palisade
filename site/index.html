@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PALISADE</title>
+<meta name="description" content="PALISADE sits between AI agents and your ledger. Every payment is checked against your policy before it moves, and every decision leaves a certificate anyone can re-derive.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #E2E5DC;
+  --paper: #ECEEE7;
+  --ink: #141A19;
+  --ink-2: #48524F;
+  --ink-3: #6B7571;
+  --rule: rgba(20, 26, 25, .13);
+  --rule-2: rgba(20, 26, 25, .26);
+  --red: #A8322B;
+  --red-ink: #F7F4EE;
+  --red-soft: rgba(168, 50, 43, .09);
+  --ledger: rgba(52, 98, 128, .09);
+  --ok: #2E7443;
+  --bad: #A8322B;
+  --warn: #8C620F;
+  --t-bg: #0E1211;
+  --t-bar: #151A19;
+  --t-rule: rgba(214, 220, 211, .10);
+  --t-fg: #CFD6CC;
+  --t-dim: #67736E;
+  --t-cmd: #F2F4EE;
+  --t-allow: #86C98C;
+  --t-deny: #EF7466;
+  --t-esc: #E8BE5C;
+  --t-hash: #8EB6CF;
+  --shadow: 0 1px 0 rgba(20, 26, 25, .05), 0 30px 70px -36px rgba(20, 26, 25, .45);
+  --display: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0F1312;
+    --paper: #151A19;
+    --ink: #E4E8E0;
+    --ink-2: #A5AFAA;
+    --ink-3: #7D8883;
+    --rule: rgba(228, 232, 224, .11);
+    --rule-2: rgba(228, 232, 224, .24);
+    --red: #E0645A;
+    --red-ink: #170D0C;
+    --red-soft: rgba(224, 100, 90, .13);
+    --ledger: rgba(142, 182, 207, .06);
+    --ok: #7FC78A;
+    --bad: #EF7466;
+    --warn: #E8BE5C;
+    --t-bg: #090C0B;
+    --t-bar: #111514;
+    --shadow: 0 0 0 1px rgba(228, 232, 224, .10), 0 30px 70px -36px rgba(0, 0, 0, .8);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0F1312;
+  --paper: #151A19;
+  --ink: #E4E8E0;
+  --ink-2: #A5AFAA;
+  --ink-3: #7D8883;
+  --rule: rgba(228, 232, 224, .11);
+  --rule-2: rgba(228, 232, 224, .24);
+  --red: #E0645A;
+  --red-ink: #170D0C;
+  --red-soft: rgba(224, 100, 90, .13);
+  --ledger: rgba(142, 182, 207, .06);
+  --ok: #7FC78A;
+  --bad: #EF7466;
+  --warn: #E8BE5C;
+  --t-bg: #090C0B;
+  --t-bar: #111514;
+  --shadow: 0 0 0 1px rgba(228, 232, 224, .10), 0 30px 70px -36px rgba(0, 0, 0, .8);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; border-radius: 3px; }
+code, .mono { font-family: var(--mono); font-size: .92em; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); }
+
+/* ── Nav ─────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 30;
+  background: var(--ground);
+  background: color-mix(in srgb, var(--ground) 84%, transparent);
+  backdrop-filter: saturate(1.15) blur(10px);
+  -webkit-backdrop-filter: saturate(1.15) blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.nav .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font: 500 13px/1 var(--mono); letter-spacing: .24em;
+  text-decoration: none; color: var(--ink);
+}
+.brand svg { width: 22px; height: 22px; color: var(--red); }
+.nav-links { display: flex; gap: 22px; margin-left: auto; font: 400 13px/1 var(--mono); }
+.nav-links a { text-decoration: none; color: var(--ink-2); }
+.nav-links a:hover { color: var(--ink); }
+.nav-links a span { color: var(--ink-3); margin-right: 6px; }
+@media (max-width: 900px) { .nav-links { display: none; } .nav .btn { margin-left: auto; } }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 40px; padding-inline: 16px;
+  border-radius: 6px; border: 1px solid var(--rule-2);
+  font: 500 14px/1 var(--sans); text-decoration: none; color: var(--ink);
+  background: transparent; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--ink-2); }
+.btn-primary { background: var(--red); border-color: var(--red); color: var(--red-ink); }
+.btn-primary:hover { filter: brightness(1.06); border-color: var(--red); }
+.btn-sm { height: 34px; padding-inline: 12px; font-size: 13px; }
+
+/* ── Hero ────────────────────────────────────────── */
+.hero {
+  position: relative;
+  padding-block: clamp(56px, 9vw, 112px) clamp(36px, 5vw, 56px);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 39px, var(--ledger) 39px 40px);
+}
+.hero-copy { position: relative; max-width: 860px; }
+.hero-copy::before {
+  content: ""; position: absolute; top: -8px; bottom: -8px; left: -28px; width: 5px;
+  border-left: 1px solid var(--red); border-right: 1px solid var(--red); opacity: .55;
+}
+@media (max-width: 700px) { .hero-copy::before { display: none; } }
+.eyebrow {
+  margin: 0 0 22px; font: 500 12px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+}
+.eyebrow b { color: var(--red); font-weight: 500; }
+h1 {
+  margin: 0;
+  font: 400 clamp(2.7rem, 7vw, 5.6rem)/1.0 var(--display);
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+h1 em, h2 em { font-style: italic; }
+h1 em { color: var(--red); }
+.lede {
+  margin: 26px 0 0; max-width: 58ch;
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem); line-height: 1.55; color: var(--ink-2);
+}
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+
+/* ── Terminal ────────────────────────────────────── */
+.term-section { padding-block: 0 clamp(64px, 9vw, 112px); }
+.term {
+  background: var(--t-bg); color: var(--t-fg);
+  border-radius: 10px; overflow: hidden; box-shadow: var(--shadow);
+  font: 400 12.5px/1.6 var(--mono);
+}
+.term-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 12px; background: var(--t-bar); border-bottom: 1px solid var(--t-rule);
+}
+.term-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+@media (max-width: 700px) {
+  .term-bar { flex-wrap: nowrap; }
+  .term-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+  .term-tabs::-webkit-scrollbar { display: none; }
+  .term-tab { white-space: nowrap; }
+}
+.term-tab, .term-ctl {
+  appearance: none; border: 1px solid transparent; background: transparent; color: var(--t-dim);
+  font: 500 12px/1 var(--mono); padding: 8px 10px; border-radius: 5px; cursor: pointer;
+}
+.term-tab:hover, .term-ctl:hover { color: var(--t-fg); }
+.term-tab[aria-selected="true"] { color: var(--t-cmd); border-color: var(--t-rule); background: rgba(255, 255, 255, .04); }
+.term-tab .n { color: var(--t-dim); margin-right: 6px; }
+.term-ctls { display: flex; gap: 4px; margin-left: auto; }
+.term-body { height: min(560px, 68vh); overflow: auto; padding: 16px 18px 20px; scrollbar-color: #2B3331 transparent; }
+.t-line { white-space: pre; min-height: 1.6em; }
+.t-cmd { color: var(--t-cmd); }
+.t-cmd .p { color: var(--t-dim); }
+.cursor { display: inline-block; width: .6em; height: 1.15em; vertical-align: -.2em; background: var(--t-fg); margin-left: 1px; animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+.v-allow { color: var(--t-allow); }
+.v-deny { color: var(--t-deny); }
+.v-escalate { color: var(--t-esc); }
+.hash { color: var(--t-hash); }
+.dim { color: var(--t-dim); }
+.term-status {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;
+  padding: 10px 18px; border-top: 1px solid var(--t-rule); background: var(--t-bar); color: var(--t-dim);
+  font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.term-status span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.term-status b { color: var(--t-cmd); font-weight: 500; margin-left: 6px; }
+.term-caption {
+  display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between;
+  margin: 14px 2px 0; font: 400 13px/1.5 var(--mono); color: var(--ink-3);
+}
+.term-caption #tNote { color: var(--ink-2); max-width: 70ch; }
+
+/* ── Sections ────────────────────────────────────── */
+.sec { padding-block: clamp(64px, 9vw, 120px); border-top: 1px solid var(--rule); }
+.sec-grid { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); }
+.sec-label {
+  position: sticky; top: 92px; align-self: start;
+  font: 500 12px/1.5 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+}
+.sec-label b { display: block; font-weight: 500; color: var(--red); margin-bottom: 4px; }
+@media (max-width: 860px) { .sec-grid { grid-template-columns: minmax(0, 1fr); } .sec-label { position: static; } }
+h2 {
+  margin: 0 0 22px; max-width: 22ch;
+  font: 400 clamp(2rem, 4vw, 3.25rem)/1.06 var(--display); letter-spacing: -.018em; text-wrap: balance;
+}
+h3 { margin: 0 0 10px; font: 600 1rem/1.35 var(--sans); }
+.prose { max-width: 62ch; color: var(--ink-2); font-size: 1.0625rem; }
+.prose p { margin: 0 0 1em; }
+.prose strong { color: var(--ink); font-weight: 600; }
+.kicker { font: 500 12px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 12px; }
+
+/* Problem */
+.quote {
+  margin: 36px 0 40px; padding-left: 22px; border-left: 2px solid var(--red); max-width: 40ch;
+  font: 400 italic clamp(1.4rem, 2.6vw, 1.9rem)/1.3 var(--display); color: var(--ink);
+}
+.quote cite { display: block; margin-top: 12px; font: 400 normal 13px/1.4 var(--mono); color: var(--ink-3); }
+.ledger-wrap { overflow-x: auto; border-top: 1px solid var(--rule-2); }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.ledger-table { min-width: 720px; }
+.ledger-table th, .ledger-table td { text-align: left; padding: 14px 16px 14px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.ledger-table th { font: 500 11.5px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.ledger-table td.amt { font: 500 15px/1.4 var(--mono); color: var(--red); white-space: nowrap; text-align: right; padding-right: 28px; }
+.ledger-table th.amt { text-align: right; padding-right: 28px; }
+.ledger-table td.date { font: 400 13px/1.5 var(--mono); color: var(--ink-3); white-space: nowrap; }
+.ledger-table td .src { font: 400 12px/1.4 var(--mono); color: var(--ink-3); }
+
+/* Stack diagram */
+.stack { display: grid; gap: 0; margin: 34px 0 0; max-width: 820px; }
+.layer {
+  display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 18px; align-items: baseline;
+  padding: 20px 22px; border: 1px solid var(--rule-2); background: var(--paper);
+}
+.layer + .flow + .layer { margin-top: 0; }
+.layer-k { font: 500 12px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.layer-v { font: 400 1.05rem/1.45 var(--sans); color: var(--ink); }
+.layer-v small { display: block; margin-top: 4px; color: var(--ink-2); font-size: .9rem; }
+.layer-core { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.layer-core .layer-k { color: var(--red); }
+.layer-core .layer-v, .layer-core .layer-v small { color: var(--ground); }
+.layer-core .layer-v strong { font: 400 1.6rem/1.1 var(--display); letter-spacing: -.01em; }
+.flow {
+  display: flex; justify-content: space-between; gap: 16px; padding: 10px 22px 10px 194px;
+  font: 400 12px/1.4 var(--mono); color: var(--ink-3);
+  border-inline: 1px dashed var(--rule-2);
+}
+@media (max-width: 640px) {
+  .layer { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .flow { padding-left: 22px; }
+}
+.points { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 44px; max-width: 980px; }
+.points p { margin: 0; color: var(--ink-2); font-size: .97rem; }
+@media (max-width: 820px) { .points { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+
+/* Gate */
+.two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(24px, 4vw, 48px); margin-top: 34px; align-items: start; }
+@media (max-width: 980px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.code {
+  margin: 0; overflow-x: auto; padding: 18px 20px; border-radius: 8px;
+  background: var(--t-bg); color: var(--t-fg); font: 400 12.5px/1.65 var(--mono); white-space: pre;
+}
+.code .k { color: #D6A7E6; }
+.code .s { color: #A9D39A; }
+.code .n { color: var(--t-esc); }
+.code .c { color: var(--t-dim); }
+.code .f { color: var(--t-hash); }
+.code .key { color: var(--t-hash); }
+.code-label { display: flex; justify-content: space-between; gap: 12px; margin: 0 0 8px; font: 400 12px/1.4 var(--mono); color: var(--ink-3); }
+.checks { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--rule-2); }
+.checks li { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--rule); }
+.checks li b { font: 500 13px/1.5 var(--mono); }
+.checks li span { color: var(--ink-2); font-size: .95rem; }
+.verdicts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 24px; }
+.verdict { padding: 14px; border: 1px solid var(--rule-2); border-radius: 6px; background: var(--paper); }
+.verdict .w { font: 500 13px/1 var(--mono); letter-spacing: .08em; }
+.verdict .x { display: block; margin-top: 8px; font: 400 12px/1.4 var(--mono); color: var(--ink-3); }
+.verdict p { margin: 8px 0 0; font-size: .88rem; color: var(--ink-2); line-height: 1.45; }
+.w-allow { color: var(--ok); } .w-esc { color: var(--warn); } .w-deny { color: var(--bad); }
+@media (max-width: 520px) { .verdicts { grid-template-columns: minmax(0, 1fr); } }
+.err-line {
+  margin-top: 24px; padding: 12px 14px; border-radius: 6px; overflow-x: auto;
+  background: var(--red-soft); color: var(--ink); font: 400 12.5px/1.5 var(--mono); white-space: pre;
+}
+.proof-note { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--rule); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; max-width: 980px; }
+.proof-note p { margin: 0; font-size: .95rem; color: var(--ink-2); }
+@media (max-width: 820px) { .proof-note { grid-template-columns: minmax(0, 1fr); gap: 18px; } }
+
+.gate-code, .evidence-cert { margin-top: 34px; }
+.gate-code .code, .evidence-cert .code { font-size: 13px; }
+.gate-code + .verdicts { margin-top: 14px; }
+.two-even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: 40px; }
+.two-even .err-line { margin-top: 0; }
+.chain-two { grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); margin-top: 28px; }
+.chain-note { font-size: .98rem; }
+@media (max-width: 980px) { .two-even, .chain-two { grid-template-columns: minmax(0, 1fr); } }
+.code .bad { color: var(--t-deny); }
+
+/* Evidence */
+.chain { border: 1px solid var(--rule-2); border-radius: 8px; background: var(--paper); overflow: hidden; }
+.chain-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--rule); }
+.chain-head .kicker { margin: 0; }
+.chain-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.chain-list { list-style: none; margin: 0; padding: 0; }
+.chain-row {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  padding: 10px 14px; border-bottom: 1px solid var(--rule); font: 400 12.5px/1.45 var(--mono);
+}
+.chain-row:last-child { border-bottom: 0; }
+.chain-row .seq { color: var(--ink-3); }
+.chain-row .what { min-width: 0; overflow-wrap: anywhere; }
+.chain-row .what input {
+  width: 9.5em; font: 500 12.5px/1 var(--mono); color: var(--ink); background: var(--ground);
+  border: 1px solid var(--rule-2); border-radius: 4px; padding: 5px 6px; text-align: right;
+}
+.chain-row .h { display: block; color: var(--ink-3); font-size: 11.5px; }
+.chain-row .st { font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.st-ok { color: var(--ok); } .st-bad { color: var(--bad); } .st-skip { color: var(--ink-3); }
+.chain-row.bad { background: var(--red-soft); }
+.chain-foot { padding: 12px 14px; border-top: 1px solid var(--rule); font: 400 12.5px/1.5 var(--mono); color: var(--ink-2); }
+.chain-foot b { font-weight: 500; }
+
+/* Stress */
+.shrink { display: grid; gap: 14px; margin: 30px 0 8px; max-width: 760px; }
+.shrink-row { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 16px; align-items: center; }
+.shrink-row span { font: 400 12px/1.4 var(--mono); color: var(--ink-3); }
+.cells { display: flex; gap: 4px; flex-wrap: wrap; }
+.cells i { width: 18px; height: 18px; border-radius: 3px; background: var(--rule-2); display: block; }
+.cells i.hit { background: var(--red); }
+@media (max-width: 640px) { .shrink-row { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
+.ce { margin-top: 18px; }
+.bench-wrap { overflow-x: auto; margin-top: 18px; border-top: 1px solid var(--rule-2); }
+.bench { min-width: 640px; }
+.bench th, .bench td { padding: 11px 14px 11px 0; border-bottom: 1px solid var(--rule); text-align: left; font-size: .95rem; }
+.bench th { font: 500 11.5px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.bench td.num, .bench th.num { text-align: right; font-family: var(--mono); font-size: 13px; padding-right: 22px; }
+.bench td.miss { color: var(--bad); font-weight: 500; }
+.bench td.zero { color: var(--ok); }
+.bench tfoot td { font-weight: 600; border-bottom: 0; padding-top: 14px; }
+.bench a { text-decoration-color: var(--rule-2); text-underline-offset: 3px; }
+.caveat { margin-top: 16px; max-width: 70ch; font-size: .92rem; color: var(--ink-3); }
+
+/* Roadmap */
+.deadlines { display: flex; flex-wrap: wrap; gap: 8px; margin: 26px 0 40px; }
+.deadline { padding: 8px 12px; border: 1px solid var(--rule-2); border-radius: 999px; font: 400 12.5px/1.3 var(--mono); color: var(--ink-2); }
+.deadline b { color: var(--ink); font-weight: 500; margin-right: 6px; }
+.road { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 2px solid var(--ink); }
+.road > div { padding: 18px 20px 0 0; }
+.road > div + div { padding-left: 20px; border-left: 1px solid var(--rule); }
+.road .v { font: 500 12px/1.3 var(--mono); color: var(--red); letter-spacing: .06em; }
+.road .when { font: 400 12px/1.3 var(--mono); color: var(--ink-3); margin-top: 4px; }
+.road h3 { margin: 14px 0 10px; font: 400 1.55rem/1.1 var(--display); }
+.road ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: .93rem; }
+.road li { margin-bottom: 6px; }
+.road .done { grid-column: 1 / -1; }
+@media (max-width: 980px) {
+  .road { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 28px; }
+  .road > div:nth-child(3) { padding-left: 0; border-left: 0; }
+}
+@media (max-width: 560px) {
+  .road { grid-template-columns: minmax(0, 1fr); }
+  .road > div + div { padding-left: 0; border-left: 0; }
+}
+
+/* Run */
+.run { background: var(--ink); color: var(--ground); }
+.run .sec-label { color: rgba(226, 229, 220, .6); }
+.run h2 { color: var(--ground); }
+.run .prose { color: rgba(226, 229, 220, .78); }
+.run .code { background: rgba(0, 0, 0, .28); border: 1px solid rgba(226, 229, 220, .14); }
+.run .btn { color: var(--ground); border-color: rgba(226, 229, 220, .3); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .run { background: var(--paper); color: var(--ink); }
+  :root:not([data-theme="light"]) .run h2 { color: var(--ink); }
+  :root:not([data-theme="light"]) .run .prose { color: var(--ink-2); }
+  :root:not([data-theme="light"]) .run .btn { color: var(--ink); border-color: var(--rule-2); }
+  :root:not([data-theme="light"]) .run .sec-label { color: var(--ink-3); }
+}
+:root[data-theme="dark"] .run { background: var(--paper); color: var(--ink); }
+:root[data-theme="dark"] .run h2 { color: var(--ink); }
+:root[data-theme="dark"] .run .prose { color: var(--ink-2); }
+:root[data-theme="dark"] .run .btn { color: var(--ink); border-color: var(--rule-2); }
+:root[data-theme="dark"] .run .sec-label { color: var(--ink-3); }
+.copy-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 16px; }
+.copy-msg { font: 400 12.5px/1 var(--mono); opacity: .75; }
+
+/* Footer */
+footer { padding-block: 36px 48px; border-top: 1px solid var(--rule); font: 400 12.5px/1.6 var(--mono); color: var(--ink-3); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 32px; justify-content: space-between; }
+footer a { color: var(--ink-2); text-underline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="PALISADE home">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M3 22V8l2-4 2 4v14z"/><path d="M8.5 22V6l2-4 2 4v16z" opacity=".85"/><path d="M14 22V8l2-4 2 4v14z" opacity=".7"/><path d="M19.5 22V10l1.5-3 1.5 3v12z" opacity=".55"/>
+      </svg>
+      PALISADE
+    </a>
+    <div class="nav-links">
+      <a href="#terminal">Terminal</a>
+      <a href="#problem"><span>01</span>Problem</a>
+      <a href="#where"><span>02</span>Where it sits</a>
+      <a href="#gate"><span>03</span>The gate</a>
+      <a href="#evidence"><span>04</span>Evidence</a>
+      <a href="#tested"><span>05</span>Tested</a>
+      <a href="#roadmap"><span>06</span>Roadmap</a>
+    </div>
+    <a class="btn btn-primary btn-sm" href="#run">Run the demo</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-copy">
+      <p class="eyebrow"><b>v0.1</b> &middot; open source &middot; written in Haskell</p>
+      <h1>Money moves only <em>with proof.</em></h1>
+      <p class="lede">PALISADE sits between AI agents and your ledger. Every payment is checked against your policy before it moves, and every decision leaves a certificate that anyone can re-derive.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#run">Run the demo</a>
+        <a class="btn" href="https://github.com/saintparish4/palisade">Read the code</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="term-section" id="terminal" aria-label="Terminal replay">
+  <div class="wrap">
+    <div class="term">
+      <div class="term-bar">
+        <div class="term-tabs" role="tablist" aria-label="Scenes" id="tTabs"></div>
+        <div class="term-ctls">
+          <button class="term-ctl" id="tPlay" type="button">Pause</button>
+          <button class="term-ctl" id="tReplay" type="button">Replay</button>
+        </div>
+      </div>
+      <div class="term-body" id="tBody" tabindex="0" role="log" aria-live="off" aria-label="Terminal output"><div id="tOut"></div></div>
+      <div class="term-status" id="tStatus"><span></span><span></span><span></span></div>
+    </div>
+    <div class="term-caption">
+      <span id="tNote"></span>
+      <span>Real output from <code>palisade</code> v0.1, replayed in your browser.</span>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="problem">
+  <div class="wrap sec-grid">
+    <div class="sec-label"><b>01</b>The problem</div>
+    <div>
+      <h2>Software already moves money. Nobody checks <em>what it is about to do.</em></h2>
+      <div class="prose">
+        <p>AI agents now hold wallets, pay invoices and rebalance treasuries. Payment networks are adding agent identities and signed mandates, which prove who asked. None of them proves that a policy was evaluated against the state the money was about to leave.</p>
+        <p>The losses of the last two years share that shape.</p>
+      </div>
+      <blockquote class="quote">Systems &ldquo;checked who signed rather than what the transaction did.&rdquo;<cite>Chainalysis, on the Drift exploit, April 2026</cite></blockquote>
+      <div class="ledger-wrap">
+        <table class="ledger-table">
+          <thead><tr><th>Date</th><th>Incident</th><th>What happened</th><th class="amt">Loss</th></tr></thead>
+          <tbody>
+            <tr><td class="date">21 Feb 2025</td><td>Bybit<br><a class="src" href="https://blocksec.com/blog/bybit-incident-a-web2-breach-enables-the-largest-crypto-hack-in-history">BlockSec</a></td><td>A tampered wallet screen showed signers a routine transfer. They approved what they saw.</td><td class="amt">$1.5B</td></tr>
+            <tr><td class="date">3 Nov 2025</td><td>Balancer V2<br><a class="src" href="https://blocksec.com/blog/balancer-v2-incident-a-rounding-inconsistency-breaks-the-invariant-and-propagates-across-chains">BlockSec</a></td><td>A rounding inconsistency broke the pool's invariant. One stored invariant check would have caught it.</td><td class="amt">$128M</td></tr>
+            <tr><td class="date">Feb 2026</td><td>OpenClaw agent<br><a class="src" href="https://www.kucoin.com/news/flash/openclaw-ai-agent-incident-causes-millions-in-user-losses">KuCoin News</a></td><td>Asked to send 4 units, an agent misread the quantity and sent its whole balance.</td><td class="amt">~$250K</td></tr>
+            <tr><td class="date">1 Apr 2026</td><td>Drift<br><a class="src" href="https://www.chainalysis.com/blog/lessons-from-the-drift-hack/">Chainalysis</a></td><td>Fake collateral, limits removed, funds gone in twelve minutes.</td><td class="amt">$285M</td></tr>
+            <tr><td class="date">4 May 2026</td><td>Grok and Bankr<br><a class="src" href="https://oecd.ai/en/incidents/2026-05-04-4a73">OECD AI incidents</a></td><td>A post on X, written in Morse code, instructed a wallet agent to transfer tokens. It did.</td><td class="amt">~$175K</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="where">
+  <div class="wrap sec-grid">
+    <div class="sec-label"><b>02</b>Where it sits</div>
+    <div>
+      <h2>A gate between whatever decides and wherever money <em>moves.</em></h2>
+      <div class="prose"><p>Decision-makers send intents down. PALISADE judges each one against the ledger and your policy, then either executes it or refuses it. A certificate comes back either way.</p></div>
+      <div class="stack" aria-label="Architecture">
+        <div class="layer"><span class="layer-k">Decides</span><span class="layer-v">AI agents, trading strategies, people, schedulers<small>Anything that can produce an intent: pay, transfer or convert.</small></span></div>
+        <div class="flow"><span>intent</span><span>certificate</span></div>
+        <div class="layer layer-core"><span class="layer-k">Judges</span><span class="layer-v"><strong>PALISADE</strong><small>Kernel checks, your policy, unforgeable proofs, a hash-chained ledger and a signed certificate for every decision.</small></span></div>
+        <div class="flow"><span>execution</span><span>events</span></div>
+        <div class="layer"><span class="layer-k">Moves</span><span class="layer-v">Bank accounts, cards, stablecoins, tokenized deposits<small>Adapters carry intents to the rails. The kernel itself does no network IO.</small></span></div>
+      </div>
+      <div class="points">
+        <div><h3>Start read-only</h3><p>Shadow mode replays your existing payment history and says what it would have blocked. Nothing in your stack changes.</p></div>
+        <div><h3>Test before you publish</h3><p>Backtest a new policy against last quarter's real payments and compare it with the one you run today.</p></div>
+        <div><h3>Replay any decision</h3><p>The ledger is a fold over an append-only log, so any past state and any past decision can be rebuilt exactly.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="gate">
+  <div class="wrap sec-grid">
+    <div class="sec-label"><b>03</b>The gate</div>
+    <div>
+      <h2>Your rules, in a language that <em>refuses to guess.</em></h2>
+      <div class="prose"><p>Policies are short files. Money carries its currency in its type, arithmetic is exact, and a rule that compares dollars with euros does not load. Every rule reports what it observed and what it required.</p></div>
+      <div class="gate-code">
+          <p class="code-label"><span>hardened.pal</span><span>excerpt</span></p>
+<pre class="code"><span class="k">set</span> agent_merchants = {<span class="s">"openai"</span>, <span class="s">"anthropic"</span>, <span class="s">"aws"</span>, <span class="s">"api-market"</span>}
+<span class="k">set</span> sanctioned      = {<span class="s">"ofac:garantex"</span>, <span class="s">"ofac:lazarus-1"</span>}
+
+<span class="k">policy</span> <span class="s">"agent-usdc"</span> <span class="k">currency</span> USDC {
+  <span class="k">require</span>  <span class="s">"not sanctioned"</span>:         counterparty <span class="k">not in</span> sanctioned
+  <span class="k">require</span>  <span class="s">"allowlisted merchant"</span>:   counterparty <span class="k">in</span> agent_merchants
+  <span class="k">require</span>  <span class="s">"per-payment cap"</span>:        amount &lt;= <span class="n">500 USDC</span>
+  <span class="k">require</span>  <span class="s">"daily agent budget"</span>:     <span class="f">total_outflow</span>(<span class="n">24h</span>) + amount &lt;= <span class="n">2000 USDC</span>
+  <span class="k">require</span>  <span class="s">"never drain the wallet"</span>: amount &lt;= <span class="n">0.25</span> * balance
+  <span class="k">require</span>  <span class="s">"no duplicate payments"</span>:  <span class="f">duplicates</span>(<span class="n">10m</span>) == <span class="n">0</span>
+  <span class="k">require</span>  <span class="s">"burst limit"</span>:            <span class="f">count</span>(<span class="n">1m</span>) &lt; <span class="n">5</span>
+  <span class="k">law</span>      <span class="s">"agent daily budget"</span>:     <span class="f">total_outflow</span>(<span class="n">24h</span>) &lt;= <span class="n">2000 USDC</span>
+}</pre>
+      </div>
+      <div class="verdicts">
+            <div class="verdict"><span class="w w-allow">ALLOW</span><span class="x">exit 0</span><p>Every check passed. The payment is committed and the log grows by one entry.</p></div>
+            <div class="verdict"><span class="w w-esc">ESCALATE</span><span class="x">exit 3</span><p>An escalate rule fired. A named person can approve it; nobody can approve a denial.</p></div>
+            <div class="verdict"><span class="w w-deny">DENY</span><span class="x">exit 2</span><p>A check failed. Nothing moves, and the refusal is recorded with its reasons.</p></div>
+          </div>
+      <div class="two two-even">
+        <div>
+          <p class="kicker">Before your rules, every intent passes four kernel checks</p>
+          <ul class="checks">
+            <li><b>well-formed</b><span>Positive amount, distinct endpoints, a valid rate for conversions.</span></li>
+            <li><b>known</b><span>The source is your account. Payments go out, transfers stay in.</span></li>
+            <li><b>fresh</b><span>The intent id has never executed and its time is not before the ledger's. Retries and backdating fail here.</span></li>
+            <li><b>funded</b><span>Only settled money counts. Inside the kernel, spending a deposit that is still pending is a type error.</span></li>
+          </ul>
+        </div>
+        <div>
+          <p class="kicker">A typo in currency is caught at load time</p>
+<div class="err-line">t.pal:3:28: this policy is for USD but the literal is in EUR;
+PALISADE never converts currencies implicitly</div>
+          <p class="caveat">The typechecker reports the file, line and column, and suggests the fix when it can, for example writing <code>250 USD</code> where a bare number was compared with money.</p>
+        </div>
+      </div>
+      <div class="proof-note">
+        <p><strong>Proofs can't be forged.</strong> Each check returns a proof value that only the checker can create. Code outside the library cannot construct one.</p>
+        <p><strong>Proofs name what they cover.</strong> A proof about one payment, in one ledger state, cannot authorize another payment or a newer state. Both are compile errors.</p>
+        <p><strong>Laws are checked, not assumed.</strong> Property tests check the kernel's own laws. The stress tester checks yours. PALISADE does not claim the whole system is formally verified.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="evidence">
+  <div class="wrap sec-grid">
+    <div class="sec-label"><b>04</b>Evidence</div>
+    <div>
+      <h2>Every decision leaves a certificate <em>you can re-derive.</em></h2>
+      <div class="prose"><p>A certificate names the intent, the exact ledger state it was judged against, the policy's hash, every check and the verdict. It contains no clock reading and no randomness, so replaying the log with the same policy reproduces it byte for byte. That is what <code>palisade audit</code> does.</p></div>
+      <div class="evidence-cert">
+        <div>
+          <p class="code-label"><span>certificate for pay-1003, the injected payment</span><span>4 of 11 checks shown</span></p>
+<pre class="code">{
+  <span class="key">"version"</span>: <span class="s">"palisade.cert/v0"</span>,
+  <span class="key">"intent"</span>: {
+    <span class="key">"id"</span>: <span class="s">"pay-1003"</span>, <span class="key">"actor"</span>: <span class="s">"agent:shopper"</span>, <span class="key">"kind"</span>: <span class="s">"pay"</span>,
+    <span class="key">"from"</span>: <span class="s">"agent-wallet"</span>, <span class="key">"to"</span>: <span class="s">"0xattacker"</span>,
+    <span class="key">"amount"</span>: <span class="s">"4000.000000"</span>, <span class="key">"currency"</span>: <span class="s">"USDC"</span>,
+    <span class="key">"memo"</span>: <span class="s">"as instructed in the product page"</span>,
+    <span class="key">"ts"</span>: <span class="s">"2026-10-02T12:00:00Z"</span>
+  },
+  <span class="key">"intent_hash"</span>: <span class="f">"7bfb147a9281b618…6a667c38"</span>,
+  <span class="key">"policy"</span>: { <span class="key">"name"</span>: <span class="s">"agent-usdc"</span>, <span class="key">"hash"</span>: <span class="f">"9e8222f8dd272281…e13ca283"</span> },
+  <span class="key">"pre_state"</span>: { <span class="key">"seq"</span>: <span class="n">8</span>, <span class="key">"head"</span>: <span class="f">"454306245f70d645…e0ec88ae"</span> },
+  <span class="key">"checks"</span>: [
+    { <span class="key">"rule"</span>: <span class="s">"kernel: well-formed"</span>, <span class="key">"outcome"</span>: <span class="s">"pass"</span>, … },
+    { <span class="key">"rule"</span>: <span class="s">"allowlisted merchant"</span>, <span class="key">"outcome"</span>: <span class="n">"fail"</span>,
+      <span class="key">"observed"</span>: <span class="s">"counterparty = \"0xattacker\""</span>, <span class="key">"required"</span>: <span class="s">"in agent_merchants"</span> },
+    { <span class="key">"rule"</span>: <span class="s">"per-payment cap"</span>, <span class="key">"outcome"</span>: <span class="n">"fail"</span>,
+      <span class="key">"observed"</span>: <span class="s">"amount = 4000.000000 USDC"</span>, <span class="key">"required"</span>: <span class="s">"&lt;= 500.000000 USDC"</span> },
+    { <span class="key">"rule"</span>: <span class="s">"daily agent budget"</span>, <span class="key">"outcome"</span>: <span class="n">"fail"</span>,
+      <span class="key">"observed"</span>: <span class="s">"total_outflow(24h) + amount = 4000.000000 USDC"</span>, … }
+  ],
+  <span class="key">"decision"</span>: <span class="n">"deny"</span>,
+  <span class="key">"approved_by"</span>: <span class="k">null</span>,
+  <span class="key">"post_state"</span>: <span class="k">null</span>
+}</pre>
+        </div>
+      </div>
+      <div class="two chain-two">
+        <div>
+          <div class="chain" id="chain">
+            <div class="chain-head">
+              <p class="kicker">events.jsonl &middot; 8 entries</p>
+              <div class="chain-btns">
+                <button class="btn btn-sm" type="button" id="cSeal" disabled>Re-seal the edited entry</button>
+                <button class="btn btn-sm" type="button" id="cReset">Reset</button>
+              </div>
+            </div>
+            <ol class="chain-list" id="cList"></ol>
+            <div class="chain-foot" id="cFoot">Verified: 8 of 8 entries. Head <b>454306245f70</b>.</div>
+          </div>
+        </div>
+        <div class="prose chain-note">
+          <p><strong>Try it.</strong> This is the real event log from the demo, checked with SHA-256 in your browser.</p>
+          <p>Each entry's hash covers its contents and the hash before it. Change an amount and that entry stops matching its hash.</p>
+          <p>Then re-seal the edited entry the way a forger would. The break moves to the next link, because its stored <code>prev</code> still points at the original.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="tested">
+  <div class="wrap sec-grid">
+    <div class="sec-label"><b>05</b>Tested against attacks</div>
+    <div>
+      <h2>It attacks your policy <em>before someone else does.</em></h2>
+      <div class="prose">
+        <p>A policy file can state laws: things that must hold in every state, such as "daily outflow stays under 15% of assets." The stress tester generates sequences shaped like real incidents: amounts one minor unit under each threshold, bursts at one timestamp, retries, new payees, spending against pending deposits. It checks every law after every step and shrinks each failure to a short reproduction.</p>
+        <p>The naive policy below caps single payments and states the daily law. Its rules don't guarantee it.</p>
+      </div>
+      <div class="shrink" aria-label="Shrinking a counterexample">
+        <div class="shrink-row"><span>random sequence, 23 steps</span><div class="cells" id="cellsA"></div></div>
+        <div class="shrink-row"><span>shrunk counterexample, 2 steps</span><div class="cells"><i class="hit"></i><i class="hit"></i></div></div>
+      </div>
+<pre class="code ce">T+00:00:00   pay treasury -> new-vendor  250000.00 USD   <span class="s">=> allow</span>
+T+00:00:00   pay treasury -> attacker-2   62500.00 USD   <span class="s">=> allow</span>
+<span class="bad">violated at step 2:</span> total_outflow(24h) = 312500.00 USD; required &lt;= 307500.00 USD</pre>
+      <div class="prose" style="margin-top:22px">
+        <p>Its USDC budget broke too: five payments built from amounts one minor unit under the cap overshot 2,000 USDC by <strong>0.000003</strong>. Exact arithmetic is why that shows up at all. The hardened policy held all 8 laws across 17,000 generated sequences.</p>
+      </div>
+
+      <p class="kicker" style="margin-top:56px">PolicyBench: ten incidents, reconstructed with ground-truth labels</p>
+      <div class="bench-wrap">
+        <table class="bench">
+          <thead><tr><th>Incident</th><th class="num">Attacks</th><th class="num">Missed by static caps</th><th class="num">Missed by hardened</th></tr></thead>
+          <tbody id="benchBody"></tbody>
+          <tfoot><tr><td>Total</td><td class="num">24</td><td class="num miss">20 &middot; $2.07M lost</td><td class="num zero">0</td></tr></tfoot>
+        </table>
+      </div>
+      <p class="caveat">The hardened policy was written alongside these incidents. Its score shows what the language can express. It does not show how well those rules generalise, and PolicyBench v1 will add a held-out set for that.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="roadmap">
+  <div class="wrap sec-grid">
+    <div class="sec-label"><b>06</b>Roadmap</div>
+    <div>
+      <h2>2027 is when this <em>stops being optional.</em></h2>
+      <div class="deadlines">
+        <span class="deadline"><b>18 Jan 2027</b>GENIUS Act takes effect</span>
+        <span class="deadline"><b>Jul 2027</b>SwiftNet 8.0, post-quantum</span>
+        <span class="deadline"><b>11 Oct 2027</b>EU, UK and Swiss T+1</span>
+        <span class="deadline"><b>2 Dec 2027</b>EU AI Act duties for credit scoring</span>
+      </div>
+      <div class="road">
+        <div><span class="v">v0.2</span><div class="when">January 2027</div><h3>Prove it</h3><ul><li>SMT proofs that a policy's rules guarantee its laws</li><li>Policy diffs: is the new one at least as strict?</li><li>Time-based rules and scenario branching</li><li>Delegation chains that can only narrow</li></ul></div>
+        <div><span class="v">v0.3</span><div class="when">March 2027</div><h3>Plug in</h3><ul><li>Server mode with concurrent authorization</li><li>A tool endpoint AI agents can call directly</li><li>Adapters for bank exports, card and agent-payment protocols</li><li>Continuous reserve checks and post-quantum signatures</li></ul></div>
+        <div><span class="v">v0.4</span><div class="when">June 2027</div><h3>Operate</h3><ul><li>Hosted control plane with a publish gate</li><li>Approval workflow with quorums</li><li>Exam-ready evidence exports</li><li>PolicyBench with a held-out set</li></ul></div>
+        <div><span class="v">v1.0</span><div class="when">Second half of 2027</div><h3>Standard</h3><ul><li>A stable certificate format, submitted to standards bodies</li><li>Refinement types on the kernel's laws</li><li>Probabilities on future violations</li></ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec run" id="run">
+  <div class="wrap sec-grid">
+    <div class="sec-label"><b>Run</b>It yourself</div>
+    <div>
+      <h2>Everything above comes from <em>one script.</em></h2>
+      <div class="prose"><p>You need GHC 9.6 and cabal 3.10 or later. The demo takes under half a minute and runs every scene in the terminal at the top of this page. The test suite has 65 examples, most of them property tests.</p></div>
+<pre class="code" id="runCode">git clone https://github.com/saintparish4/palisade
+cd palisade
+cabal build
+bash scenarios/demo/run-demo.sh</pre>
+      <div class="copy-row">
+        <button class="btn" type="button" id="copyBtn">Copy commands</button>
+        <a class="btn" href="https://github.com/saintparish4/palisade">Read the code</a>
+        <span class="copy-msg" id="copyMsg" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>PALISADE v0.1 &middot; MIT license &middot; written in Haskell</span>
+    <span>No claim of regulatory compliance is made or implied.</span>
+    <span><a href="https://github.com/saintparish4/palisade">Source on GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+const SCENES = [{"label": "authorize", "note": "Three payments from AI agents, judged against hardened.pal. Exit codes: 0 allow, 3 escalate, 2 deny.", "steps": [{"cmd": "palisade append --log events.jsonl setup.jsonl", "out": ["appended 6 events; log at seq 6, head 691d0d1f42e7a86e607fc84640a659f5a2640a4254db935cc271743493534207"], "status": [["ledger", "seq 6"], ["head", "691d0d1f42e7"], ["certificates", "0"]]}, {"cmd": "palisade authorize --log events.jsonl -p hardened.pal -i pay-aws.json --commit --key signing.key", "out": ["ALLOW  pay pay-1001  treasury -> aws  12400.00 USD", "  actor     agent:ap-bot   at 2026-10-02T10:00:00Z", "  policy    treasury-usd  sha256:9e8222f8dd27", "  state     seq 6 head 691d0d1f42e7  ->  seq 7 head 61033d5441ba", "  ok    kernel: well-formed                 pay of 12400.00 USD   [positive amount, distinct endpoints, valid rate]", "  ok    kernel: known accounts              treasury (internal) -> aws (external)   [source is internal; payee is external]", "  ok    kernel: fresh                       new intent id at 2026-10-02T10:00:00Z   [id never executed; time not before the ledger]", "  ok    kernel: funded                      settled 2000000.00 USD   [>= 12400.00 USD]", "  ok    not sanctioned                      counterparty = \"aws\"   [not in sanctioned]", "  ok    per-payment cap                     amount = 12400.00 USD   [<= 100000.00 USD]", "  ok    treasury reserve floor              source = \"treasury\"; balance_after = 1987600.00 USD => true   [source != \"treasury\" or balance_after >= 250000 USD]", "  ok    hourly velocity                     outflow(1h) + amount = 12400.00 USD   [<= 150000.00 USD]", "  ok    daily outflow cap                   total_outflow(24h) + amount = 12400.00 USD   [<= 0.15 * total_balance (= 307500.00 USD)]", "  ok    no duplicate payments               duplicates(1h) = 0   [== 0]", "  ok    max share of account                amount = 12400.00 USD   [<= 0.5 * balance (= 1000000.00 USD)]", "  ok    new payee                           known_counterparty = false; counterparty = \"aws\" => false   [escalates when not known_counterparty and counterparty not in approved_vendors and counterparty not in own_wallets]", "  ok    unusual amount                      known_counterparty = false; amount = 12400.00 USD; 3 * typical(90d) = 0.00 USD => false   [escalates when known_counterparty and amount > 3 * typical(90d)]", "  ok    dual authorization                  amount = 12400.00 USD   [escalates when > 50000.00 USD]", "  cert      sha256:07cd9df31ef2b8f52006d6799e93605db92bfbe316dc3d3f317d7178bed989c6", "committed: execution appended to events.jsonl; certificate appended to events.evidence.jsonl"], "status": [["ledger", "seq 7"], ["head", "61033d5441ba"], ["certificates", "1 · allow 1"]]}, {"cmd": "palisade authorize --log events.jsonl -p hardened.pal -i pay-new-vendor.json --commit --key signing.key", "out": ["ESCALATE  pay pay-1002  ap-agent -> acme-supp1ies  9800.00 USD", "  actor     agent:ap-bot   at 2026-10-02T11:00:00Z", "  policy    treasury-usd  sha256:9e8222f8dd27", "  state     seq 7 head 61033d5441ba", "  ok    kernel: well-formed                 pay of 9800.00 USD   [positive amount, distinct endpoints, valid rate]", "  ok    kernel: known accounts              ap-agent (internal) -> acme-supp1ies (external)   [source is internal; payee is external]", "  ok    kernel: fresh                       new intent id at 2026-10-02T11:00:00Z   [id never executed; time not before the ledger]", "  ok    kernel: funded                      settled 50000.00 USD   [>= 9800.00 USD]", "  ok    not sanctioned                      counterparty = \"acme-supp1ies\"   [not in sanctioned]", "  ok    per-payment cap                     amount = 9800.00 USD   [<= 100000.00 USD]", "  ok    treasury reserve floor              source = \"ap-agent\"; balance_after = 40200.00 USD => true   [source != \"treasury\" or balance_after >= 250000 USD]", "  ok    hourly velocity                     outflow(1h) + amount = 9800.00 USD   [<= 150000.00 USD]", "  ok    daily outflow cap                   total_outflow(24h) + amount = 22200.00 USD   [<= 0.15 * total_balance (= 305640.00 USD)]", "  ok    no duplicate payments               duplicates(1h) = 0   [== 0]", "  ok    max share of account                amount = 9800.00 USD   [<= 0.5 * balance (= 25000.00 USD)]", "  ESC   new payee                           known_counterparty = false; counterparty = \"acme-supp1ies\" => true   [escalates when not known_counterparty and counterparty not in approved_vendors and counterparty not in own_wallets]", "  ok    unusual amount                      known_counterparty = false; amount = 9800.00 USD; 3 * typical(90d) = 0.00 USD => false   [escalates when known_counterparty and amount > 3 * typical(90d)]", "  ok    dual authorization                  amount = 9800.00 USD   [escalates when > 50000.00 USD]", "  cert      sha256:9250e5f9af230c655ef84df8b005da8eb4307df37d55b1e05c2bd96335fa9f3f", "committed: nothing executed; certificate appended to events.evidence.jsonl"], "status": [["ledger", "seq 7"], ["head", "61033d5441ba"], ["certificates", "2 · escalate 1"]]}, {"cmd": "echo $?", "out": ["3"]}, {"cmd": "palisade authorize --log events.jsonl -p hardened.pal -i agent-injection.json --commit --key signing.key", "out": ["DENY  pay pay-1003  agent-wallet -> 0xattacker  4000.000000 USDC", "  actor     agent:shopper   at 2026-10-02T12:00:00Z", "  policy    agent-usdc  sha256:9e8222f8dd27", "  state     seq 7 head 61033d5441ba", "  ok    kernel: well-formed                 pay of 4000.000000 USDC   [positive amount, distinct endpoints, valid rate]", "  ok    kernel: known accounts              agent-wallet (internal) -> 0xattacker (external)   [source is internal; payee is external]", "  ok    kernel: fresh                       new intent id at 2026-10-02T12:00:00Z   [id never executed; time not before the ledger]", "  ok    kernel: funded                      settled 60000.000000 USDC   [>= 4000.000000 USDC]", "  ok    not sanctioned                      counterparty = \"0xattacker\"   [not in sanctioned]", "  FAIL  allowlisted merchant                counterparty = \"0xattacker\"   [in agent_merchants]", "  FAIL  per-payment cap                     amount = 4000.000000 USDC   [<= 500.000000 USDC]", "  FAIL  daily agent budget                  total_outflow(24h) + amount = 4000.000000 USDC   [<= 2000.000000 USDC]", "  ok    never drain the wallet              amount = 4000.000000 USDC   [<= 0.25 * balance (= 15000.000000 USDC)]", "  ok    no duplicate payments               duplicates(10m) = 0   [== 0]", "  ok    burst limit                         count(1m) = 0   [< 5]", "  cert      sha256:d3bbf7fc98009b3461cd00a50e548c92f5b4ad85fcd3df3423745ad7e812cc93", "committed: nothing executed; certificate appended to events.evidence.jsonl"], "status": [["ledger", "seq 7"], ["head", "61033d5441ba"], ["certificates", "3 · deny 1"]]}, {"cmd": "echo $?", "out": ["2"]}]}, {"label": "verify + audit", "note": "A person approves the escalation. The logs are verified, replayed and audited, then one edited amount breaks the chain.", "steps": [{"cmd": "palisade authorize --log events.jsonl -p hardened.pal -i approved.json --commit --key signing.key --approved-by cfo@example.com", "out": ["ALLOW  pay pay-1004  ap-agent -> acme-supp1ies  9800.00 USD", "  actor     agent:ap-bot   at 2026-10-02T11:30:00Z", "  policy    treasury-usd  sha256:9e8222f8dd27", "  state     seq 7 head 61033d5441ba  ->  seq 8 head 454306245f70", "  approved  by cfo@example.com", "  ok    kernel: well-formed                 pay of 9800.00 USD   [positive amount, distinct endpoints, valid rate]", "  ok    kernel: known accounts              ap-agent (internal) -> acme-supp1ies (external)   [source is internal; payee is external]", "  ok    kernel: fresh                       new intent id at 2026-10-02T11:30:00Z   [id never executed; time not before the ledger]", "  ok    kernel: funded                      settled 50000.00 USD   [>= 9800.00 USD]", "  ok    not sanctioned                      counterparty = \"acme-supp1ies\"   [not in sanctioned]", "  ok    per-payment cap                     amount = 9800.00 USD   [<= 100000.00 USD]", "  ok    treasury reserve floor              source = \"ap-agent\"; balance_after = 40200.00 USD => true   [source != \"treasury\" or balance_after >= 250000 USD]", "  ok    hourly velocity                     outflow(1h) + amount = 9800.00 USD   [<= 150000.00 USD]", "  ok    daily outflow cap                   total_outflow(24h) + amount = 22200.00 USD   [<= 0.15 * total_balance (= 305640.00 USD)]", "  ok    no duplicate payments               duplicates(1h) = 0   [== 0]", "  ok    max share of account                amount = 9800.00 USD   [<= 0.5 * balance (= 25000.00 USD)]", "  ESC   new payee                           known_counterparty = false; counterparty = \"acme-supp1ies\" => true   [escalates when not known_counterparty and counterparty not in approved_vendors and counterparty not in own_wallets]", "  ok    unusual amount                      known_counterparty = false; amount = 9800.00 USD; 3 * typical(90d) = 0.00 USD => false   [escalates when known_counterparty and amount > 3 * typical(90d)]", "  ok    dual authorization                  amount = 9800.00 USD   [escalates when > 50000.00 USD]", "  cert      sha256:66a0eab4f09bb3c788357353396d5e53d3a90674828501fd698fc535aaf5eafd", "committed: execution appended to events.jsonl; certificate appended to events.evidence.jsonl"], "status": [["ledger", "seq 8"], ["head", "454306245f70"], ["certificates", "4 · signed 4"]]}, {"cmd": "palisade verify events.jsonl --evidence events.evidence.jsonl", "out": ["log ok: 8 entries, head 454306245f70d64578d753e82f3cf7de272e92c9727e66e07c20a851e0ec88ae", "evidence ok: 4 certificates, 4 signed", "  signer 76156d83f831...  4"], "status": [["chain", "verified"], ["head", "454306245f70"], ["signatures", "4 of 4"]]}, {"cmd": "palisade replay events.jsonl", "out": ["seq 8   head 454306245f70d64578d753e82f3cf7de272e92c9727e66e07c20a851e0ec88ae", "time 2026-10-02T11:30:00Z", "", "account                 ccy                    settled               pending", "agent-wallet            USDC              60000.000000              0.000000", "ap-agent                USD                   40200.00                  0.00", "treasury                USD                 1987600.00                  0.00", "", "executed intents 2   pending transfers 0", "trial balance    USD 0.00, USDC 0.000000  (balanced)"], "status": [["trial balance", "zero"], ["executed", "2 intents"], ["pending", "none"]]}, {"cmd": "palisade audit --log events.jsonl --evidence events.evidence.jsonl -p hardened.pal", "out": ["audited 4 certificates against 8 log entries (2 executions)", "audit ok: every certificate re-derives byte for byte, and every execution has an allowing certificate"], "status": [["audit", "ok"], ["certificates", "re-derived 4 of 4"], ["executions", "2 with evidence"]]}, {"cmd": "sed 's/\"12400.00\"/\"124000.00\"/' events.jsonl > tampered.jsonl", "out": []}, {"cmd": "palisade verify tampered.jsonl", "out": ["palisade: tampered.jsonl: chain broken: entry 7: hash does not match its contents (tampered or corrupted)"], "status": [["chain", "broken at entry 7"], ["head", "untrusted"], ["exit", "1"]]}]}, {"label": "shadow + backtest", "note": "Two weeks of history judged without blocking anything, then the same history replayed under the policy and compared with the naive one.", "steps": [{"cmd": "palisade shadow -p hardened.pal history.jsonl", "out": ["mode        shadow (reality applied in full; verdicts are what PALISADE would have done)", "history     history.jsonl   policy sha256:9e8222f8dd27", "intents     22   allow 9   deny 9   escalate 4", "value would have blocked   422400.00 USD, 4000.000000 USDC", "value would have escalated 236800.00 USD", "", "rules that stopped intents", "      9  dual authorization", "      6  no duplicate payments", "      4  hourly velocity", "      2  daily outflow cap", "      2  new payee", "      1  allowlisted merchant", "      1  daily agent budget", "      1  kernel: funded", "      1  max share of account", "      1  not sanctioned", "", "stopped intents", "  line   13  ESCALATE pay h-007  treasury -> gusto-payroll  85000.00 USD", "              dual authorization: amount = 85000.00 USD [escalates when > 50000.00 USD]", "  line   14  ESCALATE pay h-008  ap-agent -> acme-supp1ies  9800.00 USD", "              new payee: known_counterparty = false; counterparty = \"acme-supp1ies\" => true [escalates when not known_counterparty and counterparty not in approved_vendors and counterparty not in own_wallets]", "  line   16  DENY     pay h-010  treasury -> aws  12400.00 USD", "              no duplicate payments: duplicates(1h) = 1 [== 0]", "  line   17  ESCALATE pay h-011  treasury -> acme-supplies  82000.00 USD", "              unusual amount: known_counterparty = true; amount = 82000.00 USD; 3 * typical(90d) = 24600.00 USD => true [escalates when known_counterparty and amount > 3 * typical(90d)]", "  line   18  DENY     pay h-012  agent-wallet -> 0xattacker  4000.000000 USDC", "              allowlisted merchant: counterparty = \"0xattacker\" [in agent_merchants]", "  line   19  ESCALATE pay h-013-0  treasury -> exchange-hot  60000.00 USD", "              dual authorization: amount = 60000.00 USD [escalates when > 50000.00 USD]", "  line   20  DENY     pay h-013-1  treasury -> exchange-hot  60000.00 USD", "              no duplicate payments: duplicates(1h) = 1 [== 0]", "  line   21  DENY     pay h-013-2  treasury -> exchange-hot  60000.00 USD", "              hourly velocity: outflow(1h) + amount = 180000.00 USD [<= 150000.00 USD]", "  line   22  DENY     pay h-013-3  treasury -> exchange-hot  60000.00 USD", "              hourly velocity: outflow(1h) + amount = 240000.00 USD [<= 150000.00 USD]", "  line   23  DENY     pay h-013-4  treasury -> exchange-hot  60000.00 USD", "              hourly velocity: outflow(1h) + amount = 300000.00 USD [<= 150000.00 USD]", "  line   24  DENY     pay h-013-5  treasury -> exchange-hot  60000.00 USD", "              hourly velocity: outflow(1h) + amount = 360000.00 USD [<= 150000.00 USD]", "  line   25  DENY     pay h-014  treasury -> ofac:garantex  15000.00 USD", "              not sanctioned: counterparty = \"ofac:garantex\" [not in sanctioned]", "  line   27  DENY     pay h-015  ap-agent -> landlord-llc  95000.00 USD", "              kernel: funded: settled 39560.00 USD (pending 300000.00 USD is not spendable) [>= 95000.00 USD]"], "status": [["intents", "22"], ["would deny", "9"], ["would escalate", "4"]]}, {"cmd": "palisade backtest -p hardened.pal history.jsonl --baseline naive.pal | sed -n '/final balances/,$p'", "out": ["final balances                     reality          under policy            difference", "agent-wallet USDC             55745.000000          59745.000000           4000.000000", "ap-agent USD                     -55440.00              49360.00             104800.00", "treasury USD                    1357950.00            1912350.00             554400.00", "", "against the baseline policy: 11 of 22 verdicts change", "  line   13  ALLOW    -> ESCALATE pay h-007  treasury -> gusto-payroll  85000.00 USD", "  line   14  ALLOW    -> ESCALATE pay h-008  ap-agent -> acme-supp1ies  9800.00 USD", "  line   16  ALLOW    -> DENY     pay h-010  treasury -> aws  12400.00 USD", "  line   17  ALLOW    -> ESCALATE pay h-011  treasury -> acme-supplies  82000.00 USD", "  line   19  ALLOW    -> ESCALATE pay h-013-0  treasury -> exchange-hot  60000.00 USD", "  line   20  ALLOW    -> ESCALATE pay h-013-1  treasury -> exchange-hot  60000.00 USD", "  line   21  ALLOW    -> ESCALATE pay h-013-2  treasury -> exchange-hot  60000.00 USD", "  line   22  ALLOW    -> ESCALATE pay h-013-3  treasury -> exchange-hot  60000.00 USD", "  line   23  ALLOW    -> ESCALATE pay h-013-4  treasury -> exchange-hot  60000.00 USD", "  line   24  ALLOW    -> ESCALATE pay h-013-5  treasury -> exchange-hot  60000.00 USD", "  line   25  ALLOW    -> DENY     pay h-014  treasury -> ofac:garantex  15000.00 USD"], "status": [["verdicts changed", "11 of 22"], ["kept in treasury", "554400.00 USD"], ["baseline", "naive.pal"]]}]}, {"label": "stress", "note": "Generated attack sequences against each policy's own laws. Failures shrink to a few steps with a command to reproduce them.", "steps": [{"cmd": "palisade stress -p naive.pal --setup setup.jsonl --count 300", "out": ["stress   policy sha256:247f96f6a094", "sequences 300   steps 5271   seed 42", "verdicts  allow 1186   deny 2510", "", "  ok    trial-balance                                  every currency sums to zero across all accounts", "  ok    no-overdraft                                   no internal account's settled balance goes negative", "  ok    no-unauthorized-movement                       state changes only when the verdict is allow", "  ok    idempotency                                    no intent id executes twice", "  ok    certificate-consistency                        each certificate names the state it was judged against and the state it produced", "  ok    replay-determinism                             replaying the resulting log from genesis reproduces the same state", "  FAIL  law \"daily outflow under 15% of assets\" (USD)  total_outflow(24h) <= 0.15 * (total_balance + total_outflow(24h))", "        case 0 (23 steps) shrunk to 2:", "          T+00:00:00   pay st-0 treasury -> new-vendor 250000.00 USD [pending-race]", "                       => allow", "          T+00:00:00   pay st-2 treasury -> attacker-2 62500.00 USD [pay]", "                       => allow", "        violated at step 2: observed total_outflow(24h) = 312500.00 USD; required <= 0.15 * (total_balance + total_outflow(24h)) (= 307500.00 USD)", "        reproduce: palisade stress --policy naive.pal --setup setup.jsonl --seed 42 --steps 30 --case 0", "", "  FAIL  law \"agent daily budget\" (USDC)                total_outflow(24h) <= 2000 USDC", "        case 46 (28 steps) shrunk to 5:", "          T+00:00:00   pay st-0-1 agent-wallet -> new-vendor 0.000007 USDC [salami-burst]", "                       => allow", "          T+00:00:00   pay st-0-2 agent-wallet -> new-vendor 499.999999 USDC [salami-burst]", "                       => allow", "          T+00:00:00   pay st-0-3 agent-wallet -> new-vendor 499.999999 USDC [salami-burst]", "                       => allow", "          T+00:00:00   pay st-0-4 agent-wallet -> new-vendor 499.999999 USDC [salami-burst]", "                       => allow", "          T+00:00:00   pay st-1 agent-wallet -> new-vendor 499.999999 USDC [retry-new-id]", "                       => allow", "        violated at step 5: observed total_outflow(24h) = 2000.000003 USDC; required <= 2000.000000 USDC", "        reproduce: palisade stress --policy naive.pal --setup setup.jsonl --seed 42 --steps 30 --case 46", "", "", "2 of 8 laws violated"], "status": [["policy", "naive.pal"], ["laws", "2 of 8 violated"], ["sequences", "300"]]}, {"cmd": "palisade stress -p hardened.pal --setup setup.jsonl --count 2000", "out": ["stress   policy sha256:9e8222f8dd27", "sequences 2000   steps 33600   seed 42", "verdicts  allow 2208   deny 21485   escalate 3897", "", "  ok    trial-balance                                  every currency sums to zero across all accounts", "  ok    no-overdraft                                   no internal account's settled balance goes negative", "  ok    no-unauthorized-movement                       state changes only when the verdict is allow", "  ok    idempotency                                    no intent id executes twice", "  ok    certificate-consistency                        each certificate names the state it was judged against and the state it produced", "  ok    replay-determinism                             replaying the resulting log from genesis reproduces the same state", "  ok    law \"daily outflow under 15% of assets\" (USD)  total_outflow(24h) <= 0.15 * (total_balance + total_outflow(24h))", "  ok    law \"agent daily budget\" (USDC)                total_outflow(24h) <= 2000 USDC", "", "all 8 laws held"], "status": [["policy", "hardened.pal"], ["laws", "all held"], ["sequences", "2,000"]]}]}, {"label": "policybench", "note": "Ten incidents from 2025 and 2026, reconstructed with labelled attacks, scored against both policies.", "steps": [{"cmd": "palisade bench -p naive.pal policybench | head -19", "out": ["PolicyBench   naive.pal   sha256:247f96f6a094", "", "incident                           attacks  denied  escal.  missed  benign  f.deny  review   lost", "01-openclaw-quantity-confusion           1       1       0       0       2       0       0   -", "02-bankr-prompt-injection                2       1       0       1       2       0       0   450.000000 USDC", "03-drift-velocity-drain                  6       0       0       6       1       0       0   1440000.00 USD", "04-duplicate-retry                       2       1       0       1       2       0       0   18400.00 USD", "05-comma-decimal-misread                 2       0       0       2       2       0       0   213350.00 USD", "06-bybit-display-mismatch                2       0       0       2       1       0       0   335000.00 USD", "07-sanctioned-counterparty               1       0       0       1       1       0       0   18000.00 USD", "08-pending-settlement-race               1       1       0       0       1       0       0   -", "09-runaway-api-spend                     6       0       0       6       4       0       0   2700.000000 USDC", "10-vendor-bank-detail-swap               1       0       0       1       2       0       0   48000.00 USD", "", "attacks caught       4 / 24  (16%)", "incidents contained  2 / 10", "false denials        0 / 18 benign intents", "human reviews        0 / 18 benign intents", "value lost           2072750.00 USD, 3150.000000 USDC"], "status": [["policy", "naive.pal"], ["attacks caught", "4 / 24"], ["value lost", "2072750.00 USD"]]}, {"cmd": "palisade bench -p hardened.pal policybench | head -19", "out": ["PolicyBench   hardened.pal   sha256:9e8222f8dd27", "", "incident                           attacks  denied  escal.  missed  benign  f.deny  review   lost", "01-openclaw-quantity-confusion           1       1       0       0       2       0       0   -", "02-bankr-prompt-injection                2       2       0       0       2       0       0   -", "03-drift-velocity-drain                  6       6       0       0       1       0       0   -", "04-duplicate-retry                       2       2       0       0       2       0       0   -", "05-comma-decimal-misread                 2       1       1       0       2       0       0   -", "06-bybit-display-mismatch                2       1       1       0       1       0       0   -", "07-sanctioned-counterparty               1       1       0       0       1       0       0   -", "08-pending-settlement-race               1       1       0       0       1       0       0   -", "09-runaway-api-spend                     6       6       0       0       4       0       0   -", "10-vendor-bank-detail-swap               1       0       1       0       2       0       0   -", "", "attacks caught       24 / 24  (100%)", "incidents contained  10 / 10", "false denials        0 / 18 benign intents", "human reviews        0 / 18 benign intents", "value lost           -"], "status": [["policy", "hardened.pal"], ["attacks caught", "24 / 24"], ["value lost", "none"]]}]}];
+const CHAIN = [{"event": {"account": "treasury", "ts": "2026-10-01T00:00:00Z", "type": "open"}, "hash": "25fe5520742eded68111b1fa1f80cbbb3ca446b68e7e50f3e98704c9a0bc3268", "prev": "0000000000000000000000000000000000000000000000000000000000000000", "seq": 1}, {"event": {"account": "ap-agent", "ts": "2026-10-01T00:00:00Z", "type": "open"}, "hash": "cdab3ed8958f1cb728b8957deace74b9415ec86da28ca65d676fd9ba42e34132", "prev": "25fe5520742eded68111b1fa1f80cbbb3ca446b68e7e50f3e98704c9a0bc3268", "seq": 2}, {"event": {"account": "agent-wallet", "ts": "2026-10-01T00:00:00Z", "type": "open"}, "hash": "55d859699166d6ce06181ec41495295ee0226399a6975f09063b9889abb8eeed", "prev": "cdab3ed8958f1cb728b8957deace74b9415ec86da28ca65d676fd9ba42e34132", "seq": 3}, {"event": {"account": "treasury", "amount": "2000000.00", "currency": "USD", "from": "bank:first-national", "id": "seed-1", "settled": true, "ts": "2026-10-01T00:00:00Z", "type": "deposit"}, "hash": "591bf508af8bde773c2986d53af6b89463e02a07f417d7676acf4edcf6978397", "prev": "55d859699166d6ce06181ec41495295ee0226399a6975f09063b9889abb8eeed", "seq": 4}, {"event": {"account": "ap-agent", "amount": "50000.00", "currency": "USD", "from": "bank:first-national", "id": "seed-2", "settled": true, "ts": "2026-10-01T00:00:00Z", "type": "deposit"}, "hash": "cae7cc334b16d68a78bdcb2e2a409b8f7e1658122d279e0886a57b8ac06bab80", "prev": "591bf508af8bde773c2986d53af6b89463e02a07f417d7676acf4edcf6978397", "seq": 5}, {"event": {"account": "agent-wallet", "amount": "60000.000000", "currency": "USDC", "from": "circle:mint", "id": "seed-3", "settled": true, "ts": "2026-10-01T00:00:00Z", "type": "deposit"}, "hash": "691d0d1f42e7a86e607fc84640a659f5a2640a4254db935cc271743493534207", "prev": "cae7cc334b16d68a78bdcb2e2a409b8f7e1658122d279e0886a57b8ac06bab80", "seq": 6}, {"event": {"intent": {"actor": "agent:ap-bot", "amount": "12400.00", "currency": "USD", "from": "treasury", "id": "pay-1001", "kind": "pay", "memo": "October cloud bill", "to": "aws", "ts": "2026-10-02T10:00:00Z"}, "policy": "9e8222f8dd272281b4d142908b1aef4456bd4b738c1dcb89679fcdf8e13ca283", "ts": "2026-10-02T10:00:00Z", "type": "execute"}, "hash": "61033d5441bacf0a71070b60b24c062fe190e9196c983268df68338992befbfa", "prev": "691d0d1f42e7a86e607fc84640a659f5a2640a4254db935cc271743493534207", "seq": 7}, {"event": {"intent": {"actor": "agent:ap-bot", "amount": "9800.00", "currency": "USD", "from": "ap-agent", "id": "pay-1004", "kind": "pay", "memo": "Invoice 7731 (bank details updated by email)", "to": "acme-supp1ies", "ts": "2026-10-02T11:30:00Z"}, "policy": "9e8222f8dd272281b4d142908b1aef4456bd4b738c1dcb89679fcdf8e13ca283", "ts": "2026-10-02T11:30:00Z", "type": "execute"}, "hash": "454306245f70d64578d753e82f3cf7de272e92c9727e66e07c20a851e0ec88ae", "prev": "61033d5441bacf0a71070b60b24c062fe190e9196c983268df68338992befbfa", "seq": 8}];
+const BENCH = [{"title": "Agent sends its whole balance instead of 4 units", "source": "https://www.kucoin.com/news/flash/openclaw-ai-agent-incident-causes-millions-in-user-losses", "attacks": 1, "naive": 0, "hard": 0}, {"title": "Prompt injection makes a wallet agent pay an attacker", "source": "https://oecd.ai/en/incidents/2026-05-04-4a73", "attacks": 2, "naive": 1, "hard": 0}, {"title": "Rapid drain under the per-transaction cap", "source": "https://www.chainalysis.com/blog/lessons-from-the-drift-hack/", "attacks": 6, "naive": 6, "hard": 0}, {"title": "Agent retries a payment that had already succeeded", "source": "https://www.finextra.com/blogposting/33090/when-agents-pay-the-wrong-party-what-the-sourced-public-record-shows-so-far-in-2026", "attacks": 2, "naive": 1, "hard": 0}, {"title": "Invoice amount misread by 100x", "source": "https://www.finextra.com/blogposting/33090/when-agents-pay-the-wrong-party-what-the-sourced-public-record-shows-so-far-in-2026", "attacks": 2, "naive": 2, "hard": 0}, {"title": "Signers approve what the screen shows, not what the transaction does", "source": "https://blocksec.com/blog/bybit-incident-a-web2-breach-enables-the-largest-crypto-hack-in-history", "attacks": 2, "naive": 2, "hard": 0}, {"title": "Payment to a sanctioned counterparty", "source": "https://ofac.treasury.gov/recent-actions/20220405", "attacks": 1, "naive": 1, "hard": 0}, {"title": "Spending money that has not settled", "source": "https://www.pymnts.com/real-time-payments/2026/tokenized-deposits-herald-the-end-of-end-of-day-banking/", "attacks": 1, "naive": 0, "hard": 0}, {"title": "An agent loop keeps paying for API calls", "source": "https://www.tomshardware.com/tech-industry/artificial-intelligence/openclaw-creator-burns-through-1-3-million-in-openai-api-tokens-in-a-single-month", "attacks": 6, "naive": 6, "hard": 0}, {"title": "Business email compromise: a lookalike payee", "source": "https://www.ic3.gov/PSA/2024/PSA240911", "attacks": 1, "naive": 1, "hard": 0}];
+
+/* ── Terminal replay ─────────────────────────────── */
+(function () {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const out = document.getElementById("tOut");
+  const body = document.getElementById("tBody");
+  const tabs = document.getElementById("tTabs");
+  const note = document.getElementById("tNote");
+  const statusEls = document.querySelectorAll("#tStatus span");
+  const playBtn = document.getElementById("tPlay");
+  let playing = !reduce;
+  let token = 0;
+  let current = 0;
+
+  SCENES.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "term-tab";
+    b.setAttribute("role", "tab");
+    b.innerHTML = '<span class="n">' + (i + 1) + "</span>" + s.label;
+    b.addEventListener("click", () => run(i, reduce || !playing ? 999 : 0));
+    tabs.appendChild(b);
+  });
+  playBtn.textContent = playing ? "Pause" : "Play";
+
+  function esc(s) { return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+  function colorize(line) {
+    let h = esc(line);
+    h = h.replace(/\b(sha256:)?[0-9a-f]{12,64}\b/g, m => '<span class="hash">' + m + "</span>");
+    h = h.replace(/\b(ALLOW|DENY|ESCALATE)\b/g, m => '<span class="v-' + m.toLowerCase() + '">' + m + "</span>");
+    h = h.replace(/^(\s+)(ok)(\s{2,})/, '$1<span class="dim">$2</span>$3');
+    h = h.replace(/^(\s+)(FAIL)(\s)/, '$1<span class="v-deny">$2</span>$3');
+    h = h.replace(/^(\s+)(ESC)(\s)/, '$1<span class="v-escalate">$2</span>$3');
+    h = h.replace(/(=&gt; allow|audit ok[^<]*|log ok|evidence ok|all \d+ laws held|\(balanced\)|approved  by \S+)/g, '<span class="v-allow">$1</span>');
+    h = h.replace(/(=&gt; deny|chain broken: [^<]*|\d+ of \d+ laws violated|violated at step \d+)/g, '<span class="v-deny">$1</span>');
+    h = h.replace(/(=&gt; escalate)/g, '<span class="v-escalate">$1</span>');
+    return h;
+  }
+  function nearBottom() { return body.scrollHeight - body.scrollTop - body.clientHeight < 60; }
+  function addLine(html, cls) {
+    const stick = nearBottom();
+    const d = document.createElement("div");
+    d.className = "t-line" + (cls ? " " + cls : "");
+    d.innerHTML = html;
+    out.appendChild(d);
+    if (stick) body.scrollTop = body.scrollHeight;
+    return d;
+  }
+  function wait(ms, my) {
+    return new Promise(res => {
+      let left = ms;
+      const tick = () => {
+        if (my !== token) return res();
+        if (!playing) return setTimeout(tick, 120);
+        left -= 40;
+        if (left <= 0) res(); else setTimeout(tick, 40);
+      };
+      tick();
+    });
+  }
+  function setStatus(st) {
+    if (!st) return;
+    st.forEach((pair, i) => {
+      if (statusEls[i]) statusEls[i].innerHTML = esc(pair[0]) + "<b>" + esc(pair[1]) + "</b>";
+    });
+  }
+  function selectTab(i) {
+    [...tabs.children].forEach((b, j) => b.setAttribute("aria-selected", String(i === j)));
+    note.textContent = SCENES[i].note;
+  }
+  async function typeCmd(cmd, instant, my) {
+    const line = addLine('<span class="p">$ </span><span class="txt"></span><span class="cursor"></span>', "t-cmd");
+    const txt = line.querySelector(".txt");
+    const cur = line.querySelector(".cursor");
+    if (instant) { txt.textContent = cmd; cur.remove(); return; }
+    await wait(350, my);
+    const step = Math.max(6, Math.min(26, 1300 / cmd.length));
+    for (let k = 0; k < cmd.length; k++) {
+      if (my !== token) return;
+      txt.textContent = cmd.slice(0, k + 1);
+      await wait(step, my);
+    }
+    await wait(220, my);
+    cur.remove();
+  }
+  async function run(i, instantSteps) {
+    const my = ++token;
+    current = i;
+    out.innerHTML = "";
+    body.scrollTop = 0;
+    selectTab(i);
+    const steps = SCENES[i].steps;
+    for (let k = 0; k < steps.length; k++) {
+      const s = steps[k];
+      const instant = k < instantSteps;
+      await typeCmd(s.cmd, instant, my);
+      if (my !== token) return;
+      for (const l of s.out) {
+        addLine(colorize(l));
+        if (!instant) {
+          await wait(/^(ALLOW|DENY|ESCALATE)/.test(l) ? 380 : 22, my);
+          if (my !== token) return;
+        }
+      }
+      setStatus(s.status);
+      if (!instant) { await wait(700, my); if (my !== token) return; }
+    }
+    if (my !== token) return;
+    const idle = addLine('<span class="p">$ </span><span class="cursor"></span>', "t-cmd");
+    if (reduce) return;
+    await wait(3600, my);
+    if (my !== token) return;
+    idle.remove();
+    run((i + 1) % SCENES.length, 0);
+  }
+  playBtn.addEventListener("click", () => {
+    playing = !playing;
+    playBtn.textContent = playing ? "Pause" : "Play";
+  });
+  document.getElementById("tReplay").addEventListener("click", () => run(current, reduce || !playing ? 999 : 0));
+  /* Open with the first payment already judged, so the terminal is never empty. */
+  run(0, reduce ? 999 : 2);
+})();
+
+/* ── Hash-chain verifier ─────────────────────────── */
+(function () {
+  const list = document.getElementById("cList");
+  const foot = document.getElementById("cFoot");
+  const sealBtn = document.getElementById("cSeal");
+  const GENESIS = "0".repeat(64);
+  let entries = [];
+  const hasCrypto = !!(window.crypto && crypto.subtle && window.TextEncoder);
+
+  function canon(v) {
+    if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
+    if (v && typeof v === "object") return "{" + Object.keys(v).sort().map(k => JSON.stringify(k) + ":" + canon(v[k])).join(",") + "}";
+    return JSON.stringify(v);
+  }
+  async function sha256(text) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+  function amountOf(ev) { return ev.type === "execute" ? ev.intent.amount : ev.amount; }
+  function setAmount(ev, v) { if (ev.type === "execute") ev.intent.amount = v; else ev.amount = v; }
+  function describe(e, i) {
+    const ev = e.event;
+    const id = "amt-" + (i + 1);
+    const input = a => '<input id="' + id + '" data-i="' + i + '" value="' + a + '" inputmode="decimal" aria-label="Amount in entry ' + (i + 1) + '">';
+    if (ev.type === "open") return "open " + ev.account;
+    if (ev.type === "deposit") return "deposit " + ev.id + " to " + ev.account + " " + input(ev.amount) + " " + ev.currency;
+    if (ev.type === "execute") return "execute " + ev.intent.id + " " + ev.intent.from + " to " + ev.intent.to + " " + input(ev.intent.amount) + " " + ev.intent.currency;
+    return ev.type;
+  }
+  function reset() {
+    entries = CHAIN.map(e => JSON.parse(JSON.stringify(e)));
+    list.innerHTML = "";
+    entries.forEach((e, i) => {
+      const li = document.createElement("li");
+      li.className = "chain-row";
+      li.innerHTML = '<span class="seq">' + e.seq + '</span><span class="what">' + describe(e, i) +
+        '<span class="h">hash ' + e.hash.slice(0, 16) + '&hellip;</span></span><span class="st st-ok">ok</span>';
+      list.appendChild(li);
+    });
+    list.querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => {
+      setAmount(entries[+inp.dataset.i].event, inp.value);
+      verify();
+    }));
+    verify();
+  }
+  let firstBadContent = -1;
+  async function verify() {
+    if (!hasCrypto) {
+      foot.innerHTML = "This browser blocked Web Crypto here, so the published hashes are shown unchecked.";
+      return;
+    }
+    const rows = list.children;
+    let prev = GENESIS;
+    let broken = -1, reason = "";
+    firstBadContent = -1;
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      const row = rows[i];
+      const st = row.querySelector(".st");
+      row.querySelector(".h").innerHTML = "hash " + e.hash.slice(0, 16) + "&hellip;";
+      if (broken >= 0) { st.className = "st st-skip"; st.textContent = "not reached"; row.classList.remove("bad"); continue; }
+      const computed = await sha256(e.prev + "\n" + canon({ seq: e.seq, event: e.event }));
+      if (e.prev !== prev) { broken = i; reason = "prev does not match the hash of entry " + i; }
+      else if (computed !== e.hash) { broken = i; reason = "hash does not match its contents"; firstBadContent = i; e._computed = computed; }
+      if (broken === i) { st.className = "st st-bad"; st.textContent = "broken"; row.classList.add("bad"); }
+      else { st.className = "st st-ok"; st.textContent = "ok"; row.classList.remove("bad"); }
+      prev = e.hash;
+    }
+    sealBtn.disabled = firstBadContent < 0;
+    if (broken < 0) foot.innerHTML = "Verified in your browser: " + entries.length + " of " + entries.length + " entries. Head <b>" + entries[entries.length - 1].hash.slice(0, 12) + "</b>.";
+    else foot.innerHTML = "<b>Chain broken at entry " + (broken + 1) + ":</b> " + reason + ". This is the error <code>palisade verify</code> reports.";
+  }
+  sealBtn.addEventListener("click", async () => {
+    if (firstBadContent < 0) return;
+    const sealed = firstBadContent;
+    const e = entries[sealed];
+    e.hash = e._computed;
+    await verify();
+    if (sealed === entries.length - 1) {
+      foot.innerHTML += " The chain checks out again, but its head changed, so it no longer matches the head recorded in signed certificates.";
+    } else {
+      foot.innerHTML += " Re-sealing moved the break one link down. A forger would have to rewrite every later entry, and the new head would still not match the one recorded in signed certificates.";
+    }
+  });
+  document.getElementById("cReset").addEventListener("click", reset);
+  reset();
+})();
+
+/* ── PolicyBench rows and shrink cells ───────────── */
+(function () {
+  const tb = document.getElementById("benchBody");
+  BENCH.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = '<td><a href="' + r.source + '">' + r.title + "</a></td>" +
+      '<td class="num">' + r.attacks + "</td>" +
+      '<td class="num ' + (r.naive > 0 ? "miss" : "zero") + '">' + r.naive + "</td>" +
+      '<td class="num ' + (r.hard > 0 ? "miss" : "zero") + '">' + r.hard + "</td>";
+    tb.appendChild(tr);
+  });
+  const cells = document.getElementById("cellsA");
+  for (let i = 0; i < 23; i++) cells.appendChild(document.createElement("i"));
+})();
+
+/* ── Copy ────────────────────────────────────────── */
+(function () {
+  const btn = document.getElementById("copyBtn");
+  const msg = document.getElementById("copyMsg");
+  const code = document.getElementById("runCode");
+  btn.addEventListener("click", () => {
+    const text = code.textContent;
+    const fallback = () => {
+      const r = document.createRange(); r.selectNodeContents(code);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      msg.textContent = "Selected. Press Ctrl+C or Cmd+C to copy.";
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => { msg.textContent = "Copied."; }, fallback);
+    } else fallback();
+  });
+})();
+</script>
+</body>
+</html>
