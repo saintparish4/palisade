@@ -51,6 +51,11 @@ bash scenarios/demo/run-demo.sh      # the full demo, under half a minute
 cabal test --test-show-details=direct   # 65 tests, including property tests
 ```
 
+The first `cabal build` on a machine compiles every dependency from source,
+and that is slow: about 12 minutes on an 8-core laptop, longer with fewer
+cores. It happens once. Later builds reuse the cabal store, and the demo
+timing above assumes a finished build.
+
 Or step by step:
 
 ```bash
