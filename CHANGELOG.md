@@ -28,7 +28,7 @@ First working version of the kernel and CLI.
   threshold-aware amounts, shrinking, and reproducible seeds.
 - **PolicyBench v0**: ten reconstructed incidents from 2025 and 2026 with
   ground-truth labels.
-- **A landing page** in `site/` whose terminal replays real CLI output and
+- **A landing page** in `docs/` whose terminal replays real CLI output and
   whose evidence section verifies the demo's hash chain in the browser.
 - CI on Linux, macOS and Windows runs `cabal check`, HLint, the tests and
   (on Linux and macOS) the end-to-end demo. The Docker image is

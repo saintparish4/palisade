@@ -264,10 +264,10 @@ properties. They cover:
 
 ## Website
 
-[`site/index.html`](site/index.html) is a standalone landing page. Its
+[`docs/index.html`](docs/index.html) is a standalone landing page. Its
 terminal replays real `palisade` output, and its evidence section verifies
-the demo's hash chain with SHA-256 in the browser. `bash site/build.sh`
-reruns every command and rebuilds the page; edit `site/template.html`, not
+the demo's hash chain with SHA-256 in the browser. `bash docs/build.sh`
+reruns every command and rebuilds the page; edit `docs/template.html`, not
 the generated file.
 
 ---

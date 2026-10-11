@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Rebuild site/index.html from real palisade output.
-# Run from the repository root: bash site/build.sh
+# Rebuild docs/index.html from real palisade output.
+# Run from the repository root: bash docs/build.sh
 set -euo pipefail
 root="$(pwd)"
 bin="$(cabal list-bin palisade)"
@@ -35,4 +35,4 @@ run 13-stress-hard  stress -p hardened.pal --setup setup.jsonl --count 2000
 run 14-bench-naive  bench -p naive.pal policybench
 run 15-bench-hard   bench -p hardened.pal policybench
 
-python3 "$root/site/build.py" "$work" "$root/site/template.html" "$root/site/index.html"
+python3 "$root/docs/build.py" "$work" "$root/docs/template.html" "$root/docs/index.html"

@@ -22,8 +22,8 @@ cabal run -v0 palisade -- check scenarios/policies/hardened.pal
 cabal run -v0 palisade -- stress -p scenarios/policies/naive.pal --setup scenarios/demo/setup.jsonl
 cabal run -v0 palisade -- bench -p scenarios/policies/hardened.pal scenarios/policybench
 
-# Rebuild the landing page from real CLI output (edit site/template.html, never site/index.html)
-bash site/build.sh
+# Rebuild the landing page from real CLI output (edit docs/template.html, never docs/index.html)
+bash docs/build.sh
 
 # Lint as CI does (HLint 3.8, fail on warnings)
 hlint src app test

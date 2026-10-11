@@ -1,7 +1,7 @@
-"""Assemble site/index.html from captured palisade output.
+"""Assemble docs/index.html from captured palisade output.
 
 Usage: build.py WORKDIR TEMPLATE OUTPUT
-WORKDIR holds out/*.txt from site/build.sh, events.jsonl and policybench/.
+WORKDIR holds out/*.txt from docs/build.sh, events.jsonl and policybench/.
 """
 import json
 import os
